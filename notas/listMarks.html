@@ -16,6 +16,12 @@
             <button onclick="toggleCreateForm()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500">
                 Crear nueva nota
             </button>
+            <div class="text-center mt-6">
+                <a href="../home.html" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500">
+                    Regresar a Inicio
+                </a>
+            </div>
+            
         </div>
 
         <!-- Formulario para crear una nueva nota -->
@@ -52,6 +58,40 @@
             </form>
         </div>
 
+        <!-- Formulario para actualizar una nota -->
+        <div id="update-form" class="mb-6 hidden">
+            <h2 class="text-xl text-center text-gray-800 mb-4">Actualizar nota</h2>
+            <form id="update-mark-form" class="space-y-4">
+                <!-- Dropdown de Estudiantes -->
+                <div>
+                    <label for="update_student_id" class="block text-gray-700">Estudiante</label>
+                    <select id="update_student_id" name="student_id" class="w-full px-4 py-2 border rounded" required>
+                        <option value="">Seleccionar Estudiante</option>
+                    </select>
+                </div>
+
+                <!-- Dropdown de Asignaturas -->
+                <div>
+                    <label for="update_subject_id" class="block text-gray-700">Asignatura</label>
+                    <select id="update_subject_id" name="subject_id" class="w-full px-4 py-2 border rounded" required>
+                        <option value="">Seleccionar Asignatura</option>
+                    </select>
+                </div>
+
+                <!-- Nota -->
+                <div>
+                    <label for="update_mark" class="block text-gray-700">Nota</label>
+                    <input type="number" id="update_mark" name="mark" class="w-full px-4 py-2 border rounded" min="0" max="10" required>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-400">
+                        Actualizar Nota
+                    </button>
+                </div>
+            </form>
+        </div>
+
         <!-- Sección de notas -->
         <section>
             <div id="mark-list" class="space-y-4">
@@ -69,14 +109,15 @@
                 const response = await fetch(`${apiUrl}/students`);
                 const data = await response.json();
 
-                const studentSelect = document.getElementById('student_id');
-                studentSelect.innerHTML = '<option value="">Seleccionar Estudiante</option>';  // Limpiar el contenido
-
-                data.forEach(student => {
-                    const option = document.createElement('option');
-                    option.value = student.id;
-                    option.textContent = `${student.name} ${student.surnames}`;
-                    studentSelect.appendChild(option);
+                const studentSelects = document.querySelectorAll('#student_id, #update_student_id');
+                studentSelects.forEach(select => {
+                    select.innerHTML = '<option value="">Seleccionar Estudiante</option>';  // Limpiar el contenido
+                    data.forEach(student => {
+                        const option = document.createElement('option');
+                        option.value = student.id;
+                        option.textContent = `${student.name} ${student.surnames}`;
+                        select.appendChild(option);
+                    });
                 });
             } catch (error) {
                 console.error('Error al obtener estudiantes:', error);
@@ -89,14 +130,15 @@
                 const response = await fetch(`${apiUrl}/subjects`);
                 const data = await response.json();
 
-                const subjectSelect = document.getElementById('subject_id');
-                subjectSelect.innerHTML = '<option value="">Seleccionar Asignatura</option>';  // Limpiar el contenido
-
-                data.forEach(subject => {
-                    const option = document.createElement('option');
-                    option.value = subject.id;
-                    option.textContent = subject.name;
-                    subjectSelect.appendChild(option);
+                const subjectSelects = document.querySelectorAll('#subject_id, #update_subject_id');
+                subjectSelects.forEach(select => {
+                    select.innerHTML = '<option value="">Seleccionar Asignatura</option>';  // Limpiar el contenido
+                    data.forEach(subject => {
+                        const option = document.createElement('option');
+                        option.value = subject.id;
+                        option.textContent = subject.name;
+                        select.appendChild(option);
+                    });
                 });
             } catch (error) {
                 console.error('Error al obtener asignaturas:', error);
@@ -109,7 +151,6 @@
                 const response = await fetch(`${apiUrl}/marks`);
                 const marks = await response.json();
 
-                // Verifica si la respuesta contiene notas
                 if (marks.length === 0) {
                     document.getElementById('mark-list').innerHTML = `<p class="text-center text-gray-600">No hay notas registradas.</p>`;
                 } else {
@@ -122,104 +163,99 @@
         }
 
         // Función para obtener los nombres de estudiantes y asignaturas a partir de los IDs
-        // Función para obtener los nombres de estudiantes y asignaturas a partir de los IDs
-async function getStudentAndSubjectNames(studentId, subjectId) {
-    let studentName = '';
-    let subjectName = '';
+        async function getStudentAndSubjectNames(studentId, subjectId) {
+            let studentName = '';
+            let subjectName = '';
 
-    try {
-        // Obtener el estudiante por su ID
-        const studentResponse = await fetch(`${apiUrl}/student/${studentId}`);
-        const studentData = await studentResponse.json();
-        studentName = studentData.student.name + ' ' + studentData.student.surnames;  // Acceso correcto al estudiante
+            try {
+                const studentResponse = await fetch(`${apiUrl}/student/${studentId}`);
+                const studentData = await studentResponse.json();
+                studentName = studentData.student.name + ' ' + studentData.student.surnames;
 
-        // Obtener la asignatura por su ID
-        const subjectResponse = await fetch(`${apiUrl}/subject/${subjectId}`);
-        const subjectData = await subjectResponse.json();
-        subjectName = subjectData.subject.name;  // Acceso correcto a la asignatura
-    } catch (error) {
-        console.error('Error al obtener los nombres de estudiante y asignatura:', error);
-    }
+                const subjectResponse = await fetch(`${apiUrl}/subject/${subjectId}`);
+                const subjectData = await subjectResponse.json();
+                subjectName = subjectData.subject.name;
+            } catch (error) {
+                console.error('Error al obtener los nombres de estudiante y asignatura:', error);
+            }
 
-    return { studentName, subjectName };
-}
+            return { studentName, subjectName };
+        }
 
         // Función para renderizar las notas con nombres
         async function renderMarks(marks) {
-    const markList = document.getElementById('mark-list');
-    markList.innerHTML = '';  // Limpiar lista antes de agregar nuevas notas
+            const markList = document.getElementById('mark-list');
+            markList.innerHTML = '';
 
-    for (const mark of marks) {
-        // Obtener los nombres del estudiante y asignatura
-        const { studentName, subjectName } = await getStudentAndSubjectNames(mark.student_id, mark.subject_id);
+            for (const mark of marks) {
+                const { studentName, subjectName } = await getStudentAndSubjectNames(mark.student_id, mark.subject_id);
 
-        const markDiv = document.createElement('div');
-        markDiv.classList.add('p-4', 'bg-white', 'rounded', 'shadow', 'hover:bg-gray-50');
-        markDiv.innerHTML = `
-            <h3 class="font-semibold text-lg text-gray-800">Estudiante: ${studentName} - Asignatura: ${subjectName}</h3>
-            <p class="text-gray-600">Nota: ${mark.mark}</p>
-            <div class="mt-4 space-x-2">
-                <!-- Ver nota -->
-                <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500" onclick="showMark(${mark.id})">Ver</button>
-                <!-- Actualizar nota -->
-                <button class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-400" onclick="updateMark(${mark.id})">Actualizar</button>
-                <!-- Eliminar nota -->
-                <button class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500" onclick="deleteMark(${mark.id})">Eliminar</button>
-            </div>
-        `;
-        markList.appendChild(markDiv);
-    }
-}
+                const markDiv = document.createElement('div');
+                markDiv.classList.add('p-4', 'bg-white', 'rounded', 'shadow', 'hover:bg-gray-50');
+                markDiv.innerHTML = `
+                    <h3 class="font-semibold text-lg text-gray-800">Estudiante: ${studentName} - Asignatura: ${subjectName}</h3>
+                    <p class="text-gray-600">Nota: ${mark.mark}</p>
+                    <div class="mt-4 space-x-2">
+                        <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500" onclick="prepareUpdateForm(${mark.id})">Actualizar</button>
+                        <button class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500" onclick="deleteMark(${mark.id})">Eliminar</button>
+                    </div>
+                `;
+                markList.appendChild(markDiv);
+            }
+        }
 
-        // Función para ver los detalles de una nota
-        async function showMark(markId) {
+        // Función para preparar el formulario de actualización
+        async function prepareUpdateForm(markId) {
             try {
                 const response = await fetch(`${apiUrl}/mark/${markId}`);
                 const data = await response.json();
-                
-                if (data.mark) {
-                    alert(`Detalles de la nota:\nEstudiante: ${data.mark.student_id}\nAsignatura: ${data.mark.subject_id}\nNota: ${data.mark.mark}`);
-                } else {
-                    alert('Nota no encontrada.');
-                }
+
+                const mark = data.mark;
+                document.getElementById('update_student_id').value = mark.student_id;
+                document.getElementById('update_subject_id').value = mark.subject_id;
+                document.getElementById('update_mark').value = mark.mark;
+
+                document.getElementById('update-mark-form').dataset.markId = mark.id;
+                document.getElementById('update-form').classList.remove('hidden');
+                document.getElementById('create-form').classList.add('hidden');
             } catch (error) {
-                console.error('Error al obtener los detalles de la nota:', error);
-                alert('Hubo un error al cargar los detalles.');
+                console.error('Error al preparar el formulario de actualización:', error);
             }
         }
 
         // Función para actualizar una nota
-        async function updateMark(markId) {
+        document.getElementById('update-mark-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
             const updatedData = {
-                student_id: prompt("Nuevo ID del Estudiante:"),
-                subject_id: prompt("Nuevo ID de la Asignatura:"),
-                mark: prompt("Nueva Nota:")
+                student_id: document.getElementById('update_student_id').value,
+                subject_id: document.getElementById('update_subject_id').value,
+                mark: document.getElementById('update_mark').value
             };
 
-            if (updatedData.student_id && updatedData.subject_id && updatedData.mark !== null) {
-                try {
-                    const response = await fetch(`${apiUrl}/mark/${markId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(updatedData)
-                    });
+            const markId = document.getElementById('update-mark-form').dataset.markId;
 
-                    if (response.ok) {
-                        alert('Nota actualizada correctamente');
-                        fetchMarks(); // Recargar la lista de notas
-                    } else {
-                        alert('Error al actualizar la nota.');
-                    }
-                } catch (error) {
-                    console.error('Error al actualizar la nota:', error);
-                    alert('Hubo un error al actualizar.');
+            try {
+                const response = await fetch(`${apiUrl}/mark/${markId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedData)
+                });
+
+                if (response.ok) {
+                    alert('Nota actualizada correctamente');
+                    fetchMarks(); // Recargar la lista de notas
+                    document.getElementById('update-form').classList.add('hidden');
+                } else {
+                    alert('Error al actualizar la nota.');
                 }
-            } else {
-                alert('Por favor ingresa todos los datos.');
+            } catch (error) {
+                console.error('Error al actualizar la nota:', error);
+                alert('Hubo un error al actualizar.');
             }
-        }
+        });
 
         // Función para eliminar una nota
         async function deleteMark(markId) {
@@ -248,7 +284,7 @@ async function getStudentAndSubjectNames(studentId, subjectId) {
             form.classList.toggle('hidden');
         }
 
-        // Función para manejar el envío del formulario
+        // Función para manejar el envío del formulario de creación
         document.getElementById('create-mark-form').addEventListener('submit', async function (e) {
             e.preventDefault();
 
@@ -270,7 +306,7 @@ async function getStudentAndSubjectNames(studentId, subjectId) {
                 if (response.ok) {
                     alert('Nota creada correctamente');
                     fetchMarks(); // Recargar la lista de notas
-                    toggleCreateForm(); // Ocultar el formulario
+                    toggleCreateForm();
                 } else {
                     alert('Error al crear la nota.');
                 }
@@ -287,5 +323,6 @@ async function getStudentAndSubjectNames(studentId, subjectId) {
             fetchMarks();
         };
     </script>
+
 </body>
 </html>
