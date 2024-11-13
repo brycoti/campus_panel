@@ -33,6 +33,15 @@
             </form>
         </div>
 
+          <!-- Botón para ver la media de todas las asignaturas -->
+          <div class="text-center mt-6">
+            <button onclick="showAllAverageMarks()" class="px-4 py-2 mb-4 bg-purple-600 text-white rounded hover:bg-purple-500">
+                Ver Media de Todas las Asignaturas
+            </button>
+        </div
+
+      >
+
         <!-- Sección Asignaturas -->
         <section>
             <div id="subject-list" class="space-y-4">
@@ -82,6 +91,8 @@
                     <div class="mt-4 space-x-2">
                         <!-- Ver asignatura -->
                         <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500" onclick="showSubject(${subject.id})">Ver</button>
+                        <!-- Ver nota media -->
+                        <button class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-500" onclick="showAverageMark(${subject.id})">Ver Nota Media</button>
                         <!-- Actualizar asignatura -->
                         <button class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-400" onclick="updateSubject(${subject.id})">Actualizar</button>
                         <!-- Eliminar asignatura -->
@@ -90,6 +101,40 @@
                 `;
                 subjectList.appendChild(subjectDiv);
             });
+        }
+
+        // Función para obtener la nota media de la asignatura
+        async function showAverageMark(subjectId) {
+            try {
+                const response = await fetch(`${apiUrl}/marksAvgBySubject/${subjectId}`);
+                const data = await response.json();
+
+                if (data && data.average_mark) {
+                    alert(`La nota media de la asignatura es: ${data.average_mark}`);
+                } else {
+                    alert('No se pudo obtener la nota media.');
+                }
+            } catch (error) {
+                console.error('Error al obtener la nota media:', error);
+                alert('Hubo un error al cargar la nota media.');
+            }
+        }
+
+        // Nueva función para obtener la media de todas las asignaturas
+        async function showAllAverageMarks() {
+            try {
+                const response = await fetch(`${apiUrl}/allMarksAvg`);
+                const data = await response.json();
+
+                if (data && data.average) {
+                    alert(`La media de todas las asignaturas es: ${data.average}`);
+                } else {
+                    alert('No se pudo obtener la media de todas las asignaturas.');
+                }
+            } catch (error) {
+                console.error('Error al obtener la media de todas las asignaturas:', error);
+                alert('Hubo un error al cargar la media de todas las asignaturas.');
+            }
         }
 
         // Función para ver los detalles de una asignatura

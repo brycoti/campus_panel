@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nota Media</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center text-blue-600 mb-8">Nota Media del Estudiante</h1>
+
+        <div id="student-info" class="bg-white p-4 rounded shadow">
+            <p class="text-xl font-semibold">La nota media del estudiante es:</p>
+            <p id="average" class="text-2xl font-bold text-green-600"></p>
+        </div>
+
+        <div class="mt-6 text-center">
+            <a href="../estudiantes/listStudents.html" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500">
+                Regresar a la lista de estudiantes
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Obtener el studentId y la media de la URL
+        const params = new URLSearchParams(window.location.search);
+        const studentId = params.get('studentId');
+        const average = params.get('average');
+
+        // Mostrar la media en la página
+        document.getElementById('average').textContent = average;
+    </script>
+</body>
+</html>

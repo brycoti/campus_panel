@@ -20,7 +20,6 @@
                 </a>
             </div>
         </div>
-       
 
         <div id="create-form" class="hidden mb-8 text-center">
             <h2 class="text-xl font-semibold text-gray-800 mb-4">Nuevo Estudiante</h2>
@@ -83,7 +82,9 @@
                     <p class="text-gray-600">Edad: ${student.age}</p>
                     <div class="mt-4 space-x-2">
                         <!-- Ver estudiante -->
-                        <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500" onclick="showStudent(${student.id})">Ver</button>
+                        <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500" onclick="viewMarks(${student.id})">Ver Notas</button>
+                        <!-- Ver nota media -->
+                        <button class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-500" onclick="viewAverageMarks(${student.id})">Ver Media</button>
                         <!-- Actualizar estudiante -->
                         <button class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-400" onclick="updateStudent(${student.id})">Actualizar</button>
                         <!-- Eliminar estudiante -->
@@ -94,26 +95,26 @@
             });
         }
 
-        // Función para mostrar los detalles de un estudiante
-        async function showStudent(studentId) {
-            try {
-                const response = await fetch(`${apiUrl}/student/${studentId}`);
-                
-                if (!response.ok) {
-                    throw new Error(`Error: ${response.statusText}`);
-                }
+        // Función para ver las notas del estudiante
+        function viewMarks(studentId) {
+            window.location.href = `../notas/notas.html?studentId=${studentId}`;
+        }
 
+        // Función para ver la media de las notas del estudiante
+        async function viewAverageMarks(studentId) {
+            try {
+                const response = await fetch(`${apiUrl}/marksAvgByStudent/${studentId}`);
                 const data = await response.json();
-                
-                if (data.student && data.student.name && data.student.age && data.student.surnames) {
-                    const student = data.student;
-                    alert(`Detalles de ${student.name}: \nEdad: ${student.age}\nApellidos: ${student.surnames}`);
+
+                if (response.ok) {
+                    // Redirigir a la página donde se muestra la media
+                    window.location.href = `../notas/nota-media.html?studentId=${studentId}&average=${data.average}`;
                 } else {
-                    alert('No se encontró el estudiante o la respuesta está mal estructurada.');
+                    alert('Error al obtener la media de notas.');
                 }
             } catch (error) {
-                console.error('Error al obtener los detalles del estudiante:', error);
-                alert('Hubo un error al cargar los detalles.');
+                console.error('Error al obtener la media de notas:', error);
+                alert('Hubo un error al cargar la media.');
             }
         }
 
