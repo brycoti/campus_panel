@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notas del Estudiante</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <!-- Botón para volver al home -->
+        <div class="text-center mb-6">
+            <a href="../home.html" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500">
+                Volver al Inicio
+            </a>
+        </div>
+
+        <h1 class="text-3xl font-bold text-center text-blue-600 mb-8">Notas del Estudiante</h1>
+
+        <!-- Sección para mostrar las notas -->
+        <section id="student-notes">
+            <!-- Las notas se cargarán aquí -->
+        </section>
+    </div>
+
+    <script>
+        const apiUrl = 'http://127.0.0.1:8000/api';  // URL de tu API
+
+        // Función para obtener el studentId de la URL
+        function getStudentIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('studentId');
+        }
+
+        // Función para obtener los detalles de la asignatura
+      // Función para obtener los detalles de la asignatura
+        async function fetchSubjectName(subjectId) {
+            try {
+                const response = await fetch(`${apiUrl}/subject/${subjectId}`); // Asumiendo que tienes un endpoint que te da el nombre de la asignatura
+                const data = await response.json();
+                
+                // Accedemos al nombre de la asignatura dentro de 'subject'
+                return data.subject ? data.subject.name : 'Desconocida';  // Si la asignatura no se encuentra, mostramos 'Desconocida'
+            } catch (error) {
+                console.error('Error al obtener el nombre de la asignatura:', error);
+                return 'Desconocida';  // En caso de error, devolvemos 'Desconocida'
+            }
+        }
+
+
+        // Función para obtener las notas del estudiante
+        async function fetchMarksByStudent(studentId) {
+            try {
+                const response = await fetch(`${apiUrl}/marksByStudent/${studentId}`);
+                const data = await response.json();
+
+                // Si no hay notas, mostrar un mensaje apropiado
+                if (data.message) {
+                    document.getElementById('student-notes').innerHTML = `<p class="text-center text-gray-600">${data.message}</p>`;
+                } else {
+                    renderMarks(data.marks);  // Si hay notas, renderizarlas
+                }
+            } catch (error) {
+                console.error('Error al obtener las notas del estudiante:', error);
+                document.getElementById('student-notes').innerHTML = `<p class="text-center text-red-600">Hubo un error al cargar las notas.</p>`;
+            }
+        }
+
+        // Función para renderizar las notas
+        async function renderMarks(marks) {
+            const marksDiv = document.getElementById('student-notes');
+            marksDiv.innerHTML = '';  // Limpiar cualquier contenido previo
+
+            // Iterar sobre las notas y mostrarlas
+            for (let mark of marks) {
+                const subjectName = await fetchSubjectName(mark.subject_id);  // Obtenemos el nombre de la asignatura
+                const markDiv = document.createElement('div');
+                markDiv.classList.add('p-4', 'bg-white', 'rounded', 'shadow', 'hover:bg-gray-50');
+                markDiv.innerHTML = `
+                    <p class="text-gray-800">Asignatura: ${subjectName} - Nota: ${mark.mark}</p>
+                `;
+                marksDiv.appendChild(markDiv);
+            }
+        }
+
+        // Obtener el studentId de la URL y cargar las notas
+        window.onload = function() {
+            const studentId = getStudentIdFromUrl();
+            if (studentId) {
+                fetchMarksByStudent(studentId);  // Llamar a la función para obtener las notas
+            } else {
+                document.getElementById('student-notes').innerHTML = `<p class="text-center text-red-600">ID de estudiante no válido.</p>`;
+            }
+        };
+    </script>
+</body>
+</html>
