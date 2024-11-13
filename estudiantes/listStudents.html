@@ -83,6 +83,8 @@
                     <div class="mt-4 space-x-2">
                         <!-- Ver estudiante -->
                         <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500" onclick="viewMarks(${student.id})">Ver Notas</button>
+                        <!-- Ver nota media -->
+                        <button class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-500" onclick="viewAverageMarks(${student.id})">Ver Media</button>
                         <!-- Actualizar estudiante -->
                         <button class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-400" onclick="updateStudent(${student.id})">Actualizar</button>
                         <!-- Eliminar estudiante -->
@@ -95,8 +97,25 @@
 
         // Función para ver las notas del estudiante
         function viewMarks(studentId) {
-            // Redirigir a notas.html con el studentId como parámetro
             window.location.href = `../notas/notas.html?studentId=${studentId}`;
+        }
+
+        // Función para ver la media de las notas del estudiante
+        async function viewAverageMarks(studentId) {
+            try {
+                const response = await fetch(`${apiUrl}/marksAvgByStudent/${studentId}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Redirigir a la página donde se muestra la media
+                    window.location.href = `../notas/nota-media.html?studentId=${studentId}&average=${data.average}`;
+                } else {
+                    alert('Error al obtener la media de notas.');
+                }
+            } catch (error) {
+                console.error('Error al obtener la media de notas:', error);
+                alert('Hubo un error al cargar la media.');
+            }
         }
 
         // Función para actualizar los detalles de un estudiante
