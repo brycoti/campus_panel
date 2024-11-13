@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Estudiantes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center text-blue-600 mb-8">Lista de Estudiantes</h1>
+
+        <!-- Botón y formulario para crear un nuevo estudiante -->
+        <div class="mb-6 text-center">
+            <button onclick="toggleCreateForm()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500">Crear Estudiante</button>
+        </div>
+
+        <div id="create-form" class="hidden mb-8 text-center">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Nuevo Estudiante</h2>
+            <form id="studentForm">
+                <input type="text" id="studentName" placeholder="Nombre" class="px-4 py-2 border border-gray-300 rounded mb-2 w-64" required />
+                <input type="text" id="studentSurnames" placeholder="Apellidos" class="px-4 py-2 border border-gray-300 rounded mb-2 w-64" required />
+                <input type="number" id="studentAge" placeholder="Edad" class="px-4 py-2 border border-gray-300 rounded mb-2 w-64" required />
+                <div class="space-x-2">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500">Crear</button>
+                    <button type="button" onclick="toggleCreateForm()" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-300">Cancelar</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sección Estudiantes -->
+        <section>
+            <div id="student-list" class="space-y-4">
+                <!-- Los estudiantes se cargarán aquí -->
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const apiUrl = 'http://127.0.0.1:8000/api';  // URL de tu API
+
+        // Función para mostrar/ocultar el formulario de creación
+        function toggleCreateForm() {
+            const form = document.getElementById('create-form');
+            form.classList.toggle('hidden');
+        }
+
+        // Función para obtener todos los estudiantes
+        async function fetchStudents() {
+            try {
+                const response = await fetch(`${apiUrl}/students`);
+                const data = await response.json();
+
+                // Verifica si la respuesta contiene estudiantes
+                if (data.length === 0) {
+                    document.getElementById('student-list').innerHTML = `<p class="text-center text-gray-600">No hay estudiantes registrados.</p>`;
+                } else {
+                    renderStudents(data);
+                }
+            } catch (error) {
+                console.error('Error al obtener los estudiantes:', error);
+                document.getElementById('student-list').innerHTML = `<p class="text-center text-red-600">Hubo un error al cargar los estudiantes.</p>`;
+            }
+        }
+
+        // Función para renderizar los estudiantes con botones para cada acción
+        function renderStudents(students) {
+            const studentList = document.getElementById('student-list');
+            studentList.innerHTML = '';  // Limpiar lista antes de agregar nuevos estudiantes
+
+            students.forEach(student => {
+                const studentDiv = document.createElement('div');
+                studentDiv.classList.add('p-4', 'bg-white', 'rounded', 'shadow', 'hover:bg-gray-50');
+                studentDiv.innerHTML = `
+                    <h3 class="font-semibold text-lg text-gray-800">${student.name} ${student.surnames}</h3>
+                    <p class="text-gray-600">Edad: ${student.age}</p>
+                    <div class="mt-4 space-x-2">
+                        <!-- Ver estudiante -->
+                        <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500" onclick="showStudent(${student.id})">Ver</button>
+                        <!-- Actualizar estudiante -->
+                        <button class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-400" onclick="updateStudent(${student.id})">Actualizar</button>
+                        <!-- Eliminar estudiante -->
+                        <button class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500" onclick="deleteStudent(${student.id})">Eliminar</button>
+                    </div>
+                `;
+                studentList.appendChild(studentDiv);
+            });
+        }
+
+        // Función para mostrar los detalles de un estudiante
+        async function showStudent(studentId) {
+            try {
+                const response = await fetch(`${apiUrl}/student/${studentId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.student && data.student.name && data.student.age && data.student.surnames) {
+                    const student = data.student;
+                    alert(`Detalles de ${student.name}: \nEdad: ${student.age}\nApellidos: ${student.surnames}`);
+                } else {
+                    alert('No se encontró el estudiante o la respuesta está mal estructurada.');
+                }
+            } catch (error) {
+                console.error('Error al obtener los detalles del estudiante:', error);
+                alert('Hubo un error al cargar los detalles.');
+            }
+        }
+
+        // Función para actualizar los detalles de un estudiante
+        async function updateStudent(studentId) {
+            const updatedData = {
+                name: prompt("Nuevo nombre:"),
+                surnames: prompt("Nuevos apellidos:"),
+                age: prompt("Nueva edad:")
+            };
+
+            if (updatedData.name && updatedData.surnames && updatedData.age) {
+                try {
+                    const response = await fetch(`${apiUrl}/student/${studentId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updatedData)
+                    });
+
+                    if (response.ok) {
+                        alert('Estudiante actualizado correctamente');
+                        fetchStudents(); // Recargar la lista de estudiantes
+                    } else {
+                        alert('Error al actualizar el estudiante.');
+                    }
+                } catch (error) {
+                    console.error('Error al actualizar el estudiante:', error);
+                    alert('Hubo un error al actualizar.');
+                }
+            } else {
+                alert('Por favor ingresa todos los datos.');
+            }
+        }
+
+        // Función para eliminar un estudiante
+        async function deleteStudent(studentId) {
+            if (confirm('¿Estás seguro de que deseas eliminar a este estudiante?')) {
+                try {
+                    const response = await fetch(`${apiUrl}/student/${studentId}`, {
+                        method: 'DELETE',
+                    });
+
+                    if (response.ok) {
+                        alert('Estudiante eliminado correctamente');
+                        fetchStudents(); // Recargar la lista de estudiantes
+                    } else {
+                        alert('Error al eliminar el estudiante.');
+                    }
+                } catch (error) {
+                    console.error('Error al eliminar el estudiante:', error);
+                    alert('Hubo un error al eliminar.');
+                }
+            }
+        }
+
+        // Función para crear un estudiante
+        async function createStudent(event) {
+            event.preventDefault();  // Evitar que se recargue la página al enviar el formulario
+
+            const studentData = {
+                name: document.getElementById('studentName').value,
+                surnames: document.getElementById('studentSurnames').value,
+                age: document.getElementById('studentAge').value
+            };
+
+            try {
+                const response = await fetch(`${apiUrl}/student`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(studentData)
+                });
+
+                if (response.ok) {
+                    alert('Estudiante creado correctamente');
+                    toggleCreateForm(); // Ocultar el formulario después de crear el estudiante
+                    fetchStudents(); // Recargar la lista de estudiantes
+                } else {
+                    alert('Error al crear el estudiante.');
+                }
+            } catch (error) {
+                console.error('Error al crear el estudiante:', error);
+                alert('Hubo un error al crear al estudiante.');
+            }
+        }
+
+        // Asociar el evento de envío del formulario
+        document.getElementById('studentForm').addEventListener('submit', createStudent);
+
+        // Cargar los estudiantes cuando la página cargue
+        window.onload = fetchStudents;
+    </script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Asignaturas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center text-blue-600 mb-8">Lista de Asignaturas</h1>
+
+        <!-- Botón y formulario para crear una nueva asignatura -->
+        <div class="mb-6 text-center">
+            <button onclick="toggleCreateForm()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500">Crear Asignatura</button>
+        </div>
+
+        <div id="create-form" class="hidden mb-8 text-center">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Nueva Asignatura</h2>
+            <form id="subjectForm">
+                <input type="text" id="subjectName" placeholder="Nombre de la asignatura" class="px-4 py-2 border border-gray-300 rounded mb-2 w-64" required />
+                <input type="text" id="subjectYear" placeholder="Curso (1r, 2n, 3r, 4t)" class="px-4 py-2 border border-gray-300 rounded mb-2 w-64" required />
+                <div class="space-x-2">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500">Crear</button>
+                    <button type="button" onclick="toggleCreateForm()" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-300">Cancelar</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sección Asignaturas -->
+        <section>
+            <div id="subject-list" class="space-y-4">
+                <!-- Las asignaturas se cargarán aquí -->
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const apiUrl = 'http://127.0.0.1:8000/api';  // URL de tu API
+
+        // Función para mostrar/ocultar el formulario de creación
+        function toggleCreateForm() {
+            const form = document.getElementById('create-form');
+            form.classList.toggle('hidden');
+        }
+
+        // Función para obtener todas las asignaturas
+        async function fetchSubjects() {
+            try {
+                const response = await fetch(`${apiUrl}/subjects`);
+                const data = await response.json();
+
+                // Verifica si la respuesta contiene asignaturas
+                if (data.length === 0) {
+                    document.getElementById('subject-list').innerHTML = `<p class="text-center text-gray-600">No hay asignaturas registradas.</p>`;
+                } else {
+                    renderSubjects(data);
+                }
+            } catch (error) {
+                console.error('Error al obtener las asignaturas:', error);
+                document.getElementById('subject-list').innerHTML = `<p class="text-center text-red-600">Hubo un error al cargar las asignaturas.</p>`;
+            }
+        }
+
+        // Función para renderizar las asignaturas con botones para cada acción
+        function renderSubjects(subjects) {
+            const subjectList = document.getElementById('subject-list');
+            subjectList.innerHTML = '';  // Limpiar lista antes de agregar nuevas asignaturas
+
+            subjects.forEach(subject => {
+                const subjectDiv = document.createElement('div');
+                subjectDiv.classList.add('p-4', 'bg-white', 'rounded', 'shadow', 'hover:bg-gray-50');
+                subjectDiv.innerHTML = `
+                    <h3 class="font-semibold text-lg text-gray-800">${subject.name}</h3>
+                    <p class="text-gray-600">Curso: ${subject.year}</p>
+                    <div class="mt-4 space-x-2">
+                        <!-- Ver asignatura -->
+                        <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500" onclick="showSubject(${subject.id})">Ver</button>
+                        <!-- Actualizar asignatura -->
+                        <button class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-400" onclick="updateSubject(${subject.id})">Actualizar</button>
+                        <!-- Eliminar asignatura -->
+                        <button class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500" onclick="deleteSubject(${subject.id})">Eliminar</button>
+                    </div>
+                `;
+                subjectList.appendChild(subjectDiv);
+            });
+        }
+
+        // Función para ver los detalles de una asignatura
+        async function showSubject(subjectId) {
+            try {
+                const response = await fetch(`${apiUrl}/subject/${subjectId}`);
+                if (!response.ok) {
+                    throw new Error('No se pudo obtener los detalles de la asignatura.');
+                }
+                const data = await response.json();
+
+                if (data.subject && data.subject.name && data.subject.year) {
+                    alert(`Detalles de la asignatura: \nNombre: ${data.subject.name}\nCurso: ${data.subject.year}`);
+                } else {
+                    alert('No se encontró la asignatura.');
+                }
+            } catch (error) {
+                console.error('Error al obtener los detalles de la asignatura:', error);
+                alert('Hubo un error al cargar los detalles.');
+            }
+        }
+
+        // Función para actualizar los detalles de una asignatura
+        async function updateSubject(subjectId) {
+            const updatedData = {
+                name: prompt("Nuevo nombre de la asignatura:"),
+                year: prompt("Nuevo curso (1r, 2n, 3r, 4t):")
+            };
+
+            if (updatedData.name && updatedData.year && ['1r', '2n', '3r', '4t'].includes(updatedData.year)) {
+                try {
+                    const response = await fetch(`${apiUrl}/subject/${subjectId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updatedData)
+                    });
+
+                    if (response.ok) {
+                        alert('Asignatura actualizada correctamente');
+                        fetchSubjects(); // Recargar la lista de asignaturas
+                    } else {
+                        alert('Error al actualizar la asignatura.');
+                    }
+                } catch (error) {
+                    console.error('Error al actualizar la asignatura:', error);
+                    alert('Hubo un error al actualizar.');
+                }
+            } else {
+                alert('Por favor ingresa todos los datos correctamente.');
+            }
+        }
+
+        // Función para eliminar una asignatura
+        async function deleteSubject(subjectId) {
+            if (confirm('¿Estás seguro de que deseas eliminar esta asignatura?')) {
+                try {
+                    const response = await fetch(`${apiUrl}/subject/${subjectId}`, {
+                        method: 'DELETE',
+                    });
+
+                    if (response.ok) {
+                        alert('Asignatura eliminada correctamente');
+                        fetchSubjects(); // Recargar la lista de asignaturas
+                    } else {
+                        alert('Error al eliminar la asignatura.');
+                    }
+                } catch (error) {
+                    console.error('Error al eliminar la asignatura:', error);
+                    alert('Hubo un error al eliminar.');
+                }
+            }
+        }
+
+        // Función para crear una asignatura
+        async function createSubject(event) {
+            event.preventDefault();  // Evitar que se recargue la página al enviar el formulario
+
+            const subjectData = {
+                name: document.getElementById('subjectName').value,
+                year: document.getElementById('subjectYear').value
+            };
+
+            try {
+                const response = await fetch(`${apiUrl}/subject`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(subjectData)
+                });
+
+                if (response.ok) {
+                    alert('Asignatura creada correctamente');
+                    toggleCreateForm(); // Ocultar el formulario después de crear la asignatura
+                    fetchSubjects(); // Recargar la lista de asignaturas
+                } else {
+                    alert('Error al crear la asignatura.');
+                }
+            } catch (error) {
+                console.error('Error al crear la asignatura:', error);
+                alert('Hubo un error al crear la asignatura.');
+            }
+        }
+
+        // Asociar el evento de envío del formulario
+        document.getElementById('subjectForm').addEventListener('submit', createSubject);
+
+        // Cargar las asignaturas cuando la página cargue
+        window.onload = fetchSubjects;
+    </script>
+</body>
+</html>

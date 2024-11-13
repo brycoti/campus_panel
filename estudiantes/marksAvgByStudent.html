@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promedio de Notas de Estudiante</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center text-blue-600 mb-8">Promedio de Notas de Estudiante</h1>
+
+        <div>
+            <label for="studentId" class="text-lg">Ingrese el ID del Estudiante:</label>
+            <input type="number" id="studentId" class="border rounded px-4 py-2 mt-2 w-full" placeholder="ID del Estudiante">
+            <button id="fetchAvgBtn" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500">Ver Promedio</button>
+        </div>
+
+        <section>
+            <div id="student-avg" class="mt-8"></div>
+        </section>
+    </div>
+
+    <script>
+        const apiUrl = 'http://127.0.0.1:8000/api';  // URL de tu API
+
+        // Función para obtener el promedio de notas por estudiante
+        async function fetchAvgByStudent(studentId) {
+            try {
+                const response = await fetch(`${apiUrl}/marksAvgByStudent/${studentId}`);
+                const data = await response.json();
+
+                if (data.message) {
+                    document.getElementById('student-avg').innerHTML = `<p class="text-center text-gray-600">${data.message}</p>`;
+                } else {
+                    renderAvg(data);
+                }
+            } catch (error) {
+                console.error('Error al obtener el promedio del estudiante:', error);
+                document.getElementById('student-avg').innerHTML = `<p class="text-center text-red-600">Hubo un error al cargar el promedio.</p>`;
+            }
+        }
+
+        // Función para renderizar el promedio
+        function renderAvg(data) {
+            const avgDiv = document.getElementById('student-avg');
+            avgDiv.innerHTML = `
+                <h3 class="font-semibold text-lg text-gray-800">Promedio de notas:</h3>
+                <p class="text-gray-600">Promedio: ${data.average}</p>
+            `;
+        }
+
+        // Evento para el botón
+        document.getElementById('fetchAvgBtn').addEventListener('click', () => {
+            const studentId = document.getElementById('studentId').value;
+            if (studentId) {
+                fetchAvgByStudent(studentId);
+            } else {
+                alert('Por favor ingrese el ID del estudiante');
+            }
+        });
+    </script>
+</body>
+</html>

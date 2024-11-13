@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Notas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center text-blue-600 mb-8">Lista de Notas</h1>
+
+        <!-- Sección Notas -->
+        <section>
+            <div id="mark-list" class="space-y-4">
+                <!-- Las notas se cargarán aquí -->
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Cambiar la URL para que apunte a tu API local
+        const apiUrl = 'http://127.0.0.1:8000/api';  // URL de tu API
+
+        // Función para obtener todas las notas
+        async function fetchMarks() {
+            try {
+                const response = await fetch(`${apiUrl}/marks`);
+                const data = await response.json();
+
+                // Verifica si la respuesta contiene notas
+                if (data.length === 0) {
+                    document.getElementById('mark-list').innerHTML = `<p class="text-center text-gray-600">No hay notas registradas.</p>`;
+                } else {
+                    renderMarks(data);
+                }
+            } catch (error) {
+                console.error('Error al obtener las notas:', error);
+                document.getElementById('mark-list').innerHTML = `<p class="text-center text-red-600">Hubo un error al cargar las notas.</p>`;
+            }
+        }
+
+        // Función para renderizar las notas
+        function renderMarks(marks) {
+            const markList = document.getElementById('mark-list');
+            markList.innerHTML = '';  // Limpiar lista antes de agregar nuevas notas
+
+            marks.forEach(mark => {
+                const markDiv = document.createElement('div');
+                markDiv.classList.add('p-4', 'bg-white', 'rounded', 'shadow', 'hover:bg-gray-50');
+                markDiv.innerHTML = `
+                    <h3 class="font-semibold text-lg text-gray-800">Estudiante: ${mark.student_id} | Asignatura: ${mark.subject_id}</h3>
+                    <p class="text-gray-600">Nota: ${mark.mark}</p>
+                `;
+                markList.appendChild(markDiv);
+            });
+        }
+
+        // Cargar las notas cuando la página cargue
+        window.onload = fetchMarks;
+    </script>
+</body>
+</html>
